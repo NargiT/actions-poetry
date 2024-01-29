@@ -17,8 +17,25 @@ runs:
   using: "composite"
   steps:
     - run: |
-        pip install --user pipx
+      if [ "$RUNNER_OS" == "Linux" ]; then
+        MAJOR="$(echo $VERSION_ID | cut -d '.' -f0)"
+        if [ "$MAJOR" >= 23]; then
+          python3 -m pip install --user pipx
+          python3 -m pipx ensurepath
+        else
+          pip install --user pipx
+          pipx ensurepath
+        fi
+      elif [ "$RUNNER_OS" == "Windows" ]; then
+        scoop install pipx
         pipx ensurepath
+      elif [ "$RUNNER_OS" == "macOS" ]; then
+        brew install pipx
+        pipx ensurepath
+      else
+        echo "$RUNNER_OS not supported"
+        exit 1
+      fi
       shell: bash
     - if: ${{ inputs.poetry-version == 'latest' }}
       run: |
